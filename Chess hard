@@ -1,0 +1,122 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.HashMap;
+import java.util.Map;
+import chesspresso.game.Game;
+import chesspresso.position.Position;
+import chesspresso.move.IllegalMoveException;
+import chesspresso.move.Move;
+
+public class ChessGame extends JPanel {
+    private static final int CELL_SIZE = 80;
+    private static final int BOARD_SIZE = 8;
+    private Position position;
+    private int selectedRow = -1, selectedCol = -1;
+    private boolean whiteTurn = true;
+    
+    private static final Map<Character, String> pieceSymbols = new HashMap<>();
+    
+    static {
+        pieceSymbols.put('P', "♙"); pieceSymbols.put('N', "♘"); pieceSymbols.put('B', "♗");
+        pieceSymbols.put('R', "♖"); pieceSymbols.put('Q', "♕"); pieceSymbols.put('K', "♔");
+        pieceSymbols.put('p', "♟"); pieceSymbols.put('n', "♞"); pieceSymbols.put('b', "♝");
+        pieceSymbols.put('r', "♜"); pieceSymbols.put('q', "♛"); pieceSymbols.put('k', "♚");
+    }
+    
+    public ChessGame() {
+        setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE + 40));
+        position = new Position(Position.createInitialPosition());
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int col = e.getX() / CELL_SIZE;
+                int row = e.getY() / CELL_SIZE;
+                
+                if (selectedRow == -1) {
+                    selectedRow = row;
+                    selectedCol = col;
+                } else {
+                    makeMove(selectedRow, selectedCol, row, col);
+                    selectedRow = -1;
+                    selectedCol = -1;
+                }
+                repaint();
+            }
+        });
+    }
+    
+    private void makeMove(int fromRow, int fromCol, int toRow, int toCol) {
+        int fromSqr = (7 - fromRow) * 8 + fromCol;
+        int toSqr = (7 - toRow) * 8 + toCol;
+        Move move = new Move(fromSqr, toSqr, position.getStone(fromSqr));
+        
+        try {
+            position.doMove(move);
+            whiteTurn = !whiteTurn;
+            if (position.isMate()) {
+                JOptionPane.showMessageDialog(this, "Checkmate! " + (whiteTurn ? "Black" : "White") + " wins!");
+            }
+        } catch (IllegalMoveException e) {
+            System.out.println("Invalid move!");
+        }
+    }
+    
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        drawBoard(g);
+        drawPieces(g);
+        drawStatus(g);
+    }
+    
+    private void drawBoard(Graphics g) {
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                boolean isLight = (row + col) % 2 == 0;
+                g.setColor(isLight ? new Color(240, 217, 181) : new Color(181, 136, 99));
+                g.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                
+                if (row == selectedRow && col == selectedCol) {
+                    g.setColor(Color.YELLOW);
+                    g.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        }
+    }
+    
+    private void drawPieces(Graphics g) {
+        for (int row = 0; row < BOARD_SIZE; row++) {
+            for (int col = 0; col < BOARD_SIZE; col++) {
+                int sqr = (7 - row) * 8 + col;
+                char piece = position.getStone(sqr);
+                
+                if (piece != '.') {
+                    g.setFont(new Font("SansSerif", Font.BOLD, 50));
+                    g.setColor(Character.isUpperCase(piece) ? Color.WHITE : Color.BLACK);
+                    g.drawString(pieceSymbols.get(piece), col * CELL_SIZE + 20, row * CELL_SIZE + 60);
+                }
+            }
+        }
+    }
+    
+    private void drawStatus(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.fillRect(0, BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE, 40);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("SansSerif", Font.BOLD, 20));
+        String status = "Turn: " + (whiteTurn ? "White" : "Black");
+        g.drawString(status, 10, BOARD_SIZE * CELL_SIZE + 25);
+    }
+    
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Chess Game");
+        ChessGame game = new ChessGame();
+        frame.add(game);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setResizable(false);
+        frame.setVisible(true);
+    }
+}
