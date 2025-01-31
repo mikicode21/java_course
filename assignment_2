@@ -1,0 +1,93 @@
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class UserProcessor {
+    
+    // User class with Lombok-like functionality manually implemented
+    static class User {
+        private int id;
+        private String firstName;
+        private String lastName;
+        private int age;
+        private String country;
+
+        public User(int id, String firstName, String lastName, int age, String country) {
+            this.id = id;
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.age = age;
+            this.country = country;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public int getAge() {
+            return age;
+        }
+
+        public String getCountry() {
+            return country;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("User{id=%d, firstName='%s', lastName='%s', age=%d, country='%s'}",
+                    id, firstName, lastName, age, country);
+        }
+    }
+
+  
+    public static void printUsersSortedByLastName(List<User> users) {
+        users.stream()
+             .sorted(Comparator.comparing(User::getLastName))
+             .forEach(System.out::println);
+    }
+
+  
+    public static void printUsersSortedByAge(List<User> users) {
+        users.stream()
+             .sorted(Comparator.comparingInt(User::getAge))
+             .forEach(System.out::println);
+    }
+
+    public static boolean areAllUsersOlderThan7(List<User> users) {
+        return users.stream().allMatch(user -> user.getAge() > 7);
+    }
+
+    
+    public static double calculateAverageAge(List<User> users) {
+        return users.stream()
+                    .mapToInt(User::getAge)
+                    .average()
+                    .orElse(0.0);
+    }
+    public static long countUniqueCountries(List<User> users) {
+        return users.stream()
+                    .map(User::getCountry)
+                    .distinct()
+                    .count();
+    }
+
+    public static void main(String[] args) {
+        List<User> users = Arrays.asList(
+            new User(1, "John", "Doe", 25, "USA"),
+            new User(2, "Alice", "Smith", 30, "Canada"),
+            new User(3, "Bob", "Johnson", 22, "UK"),
+          
+        );
+
+        System.out.println("Users sorted by last name:");
+        printUsersSortedByLastName(users);
+
+        System.out.println("\nUsers sorted by age:");
+        printUsersSortedByAge(users);
+
+        System.out.println("\nAre all users older than 7? " + areAllUsersOlderThan7(users));
+
+        System.out.println("\nAverage age of users: " + calculateAverageAge(users));
+
+        System.out.println("\nNumber of unique countries: " + countUniqueCountries(users));
+    }
+}
