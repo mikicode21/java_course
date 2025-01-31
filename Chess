@@ -1,0 +1,76 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
+
+public class Match3Game extends JPanel implements MouseListener {
+    private final int GRID_SIZE = 8;
+    private final int CELL_SIZE = 60;
+    private final int[][] board = new int[GRID_SIZE][GRID_SIZE];
+    private final Random random = new Random();
+    private int selectedRow = -1, selectedCol = -1;
+    private int score = 0;
+
+    public Match3Game() {
+        setPreferredSize(new Dimension(GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE));
+        addMouseListener(this);
+        initializeBoard();
+    }
+
+    private void initializeBoard() {
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                board[row][col] = random.nextInt(5) + 1; 
+            }
+        }
+        removeMatches(); // Ensure no initial matches
+    }
+
+    private void removeMatches() {
+        boolean foundMatch;
+        do {
+            foundMatch = false;
+            boolean[][] toRemove = new boolean[GRID_SIZE][GRID_SIZE];
+
+            // Check for horizontal matches
+            for (int row = 0; row < GRID_SIZE; row++) {
+                for (int col = 0; col < GRID_SIZE - 2; col++) {
+                    if (board[row][col] != 0 && board[row][col] == board[row][col + 1] && board[row][col] == board[row][col + 2]) {
+                        toRemove[row][col] = toRemove[row][col + 1] = toRemove[row][col + 2] = true;
+                        foundMatch = true;
+                    }
+                }
+            }
+
+            // Check for vertical matches
+            for (int col = 0; col < GRID_SIZE; col++) {
+                for (int row = 0; row < GRID_SIZE - 2; row++) {
+                    if (board[row][col] != 0 && board[row][col] == board[row + 1][col] && board[row][col] == board[row + 2][col]) {
+                        toRemove[row][col] = toRemove[row + 1][col] = toRemove[row + 2][col] = true;
+                        foundMatch = true;
+                    }
+                }
+            }
+
+            // Remove matched elements
+            for (int row = 0; row < GRID_SIZE; row++) {
+                for (int col = 0; col < GRID_SIZE; col++) {
+                    if (toRemove[row][col]) {
+                        board[row][col] = 0; // Mark as empty
+                        score += 10; 
+                    }
+                }
+            }
+
+            // Drop elements down
+            for (int col = 0; col < GRID_SIZE; col++) {
+                for (int row = GRID_SIZE - 1; row >= 0; row--) {
+                    if (board[row][col] == 0) {
+                        for (int above = row - 1; above >= 0; above--) {
+                            if (board[above][col] != 0) {
+                                board[row][col] = board[above][col];
+                                board[above][col] = 0;
+                                break;
+                            }
+                        }
+                    }
